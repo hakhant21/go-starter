@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT="starter"
 if [[ -r /dev/tty ]]; then
-  read -r -p "Project name [starter]: " ROOT </dev/tty
-else
-  ROOT="starter"
+  while :; do
+    read -r -p "Project name [starter]: " PROJECT_NAME </dev/tty || exit 1
+    PROJECT_NAME="${PROJECT_NAME:-starter}"
+
+    # Avoid treating shell assignment text such as ROOT= as a directory name.
+    if [[ "$PROJECT_NAME" == *[=/\\]* || "$PROJECT_NAME" == "." || "$PROJECT_NAME" == ".." ]]; then
+      printf '%s\n' 'Project name must be a single directory name (without =, /, or \\).'
+      continue
+    fi
+
+    ROOT="$PROJECT_NAME"
+    break
+  done
 fi
-ROOT="${ROOT:-starter}"
 MODULE="github.com/hakhant21/go-starter"
 
 echo "==> Creating $ROOT/"
