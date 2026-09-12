@@ -16,13 +16,13 @@ chmod +x skeleton.sh
 To download and run the generator with `curl`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/hakhant21/go-starter/main/skeleton.sh -o skeleton.sh && bash skeleton.sh
+curl -fsSL https://raw.githubusercontent.com/hakhant21/go-starter/main/skeleton.sh | bash
 
 ```
 
 Enter a project name when prompted. If no name is provided, the generated
 directory is `starter/`. The script recreates the selected directory from
-scratch and copies `skeleton.sh` into it.
+scratch. The script is not saved in either directory after generation.
 
 ## Run the generated project
 

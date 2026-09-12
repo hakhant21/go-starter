@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
-if [[ -n "$SCRIPT_SOURCE" && -f "$SCRIPT_SOURCE" ]]; then
-  SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_SOURCE")" && pwd)"
-  SCRIPT_PATH="$SCRIPT_DIR/$(basename -- "$SCRIPT_SOURCE")"
+if [[ -r /dev/tty ]]; then
+  read -r -p "Project name [starter]: " ROOT </dev/tty
 else
-  SCRIPT_PATH=""
+  ROOT="starter"
 fi
-
-read -r -p "Project name [starter]: " ROOT
 ROOT="${ROOT:-starter}"
 MODULE="github.com/hakhant21/go-starter"
 
@@ -17,9 +13,6 @@ echo "==> Creating $ROOT/"
 rm -rf "$ROOT"
 mkdir -p "$ROOT"
 cd "$ROOT"
-if [[ -n "$SCRIPT_PATH" ]]; then
-  cp "$SCRIPT_PATH" skeleton.sh
-fi
 
 # ─────────────────────────────────────────────────────────────
 # Directory tree
@@ -3779,23 +3772,6 @@ cat > README.md <<'EOF'
 Gin + GORM REST API starter with JWT authentication, refresh tokens, email
 verification, password reset, RBAC, Redis caching, Prometheus metrics, tests,
 Docker, and GitHub Actions CI.
-
-## Generate another project
-
-The generator is included in this project. Run it from this directory:
-
-```sh
-./skeleton.sh
-```
-
-To download the generator with `curl`:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/hakhant21/go-starter/main/skeleton.sh -o skeleton.sh && bash skeleton.sh
-```
-
-Enter a project name when prompted. Leaving the name blank creates `starter/`.
-The selected directory is recreated from scratch.
 
 ## Run the project
 
