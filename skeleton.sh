@@ -75,6 +75,43 @@ mkdir -p \
 touch internal/database/migrations/.gitkeep
 touch docs/.gitkeep
 
+cat > docs/docs.go <<'EOF'
+package docs
+
+import "github.com/swaggo/swag"
+
+const docTemplate = `{
+    "swagger": "2.0",
+    "info": {
+        "title": "Starter API",
+        "description": "Gin + GORM REST API starter.",
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "paths": {}
+}`
+
+var SwaggerInfo = &swag.Spec{
+	Version:          "1.0",
+	BasePath:         "/api/v1",
+	Title:            "Starter API",
+	Description:      "Gin + GORM REST API starter.",
+	InfoInstanceName: "swagger",
+	SwaggerTemplate:  docTemplate,
+}
+
+func init() {
+	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
+}
+EOF
+
 # ─────────────────────────────────────────────────────────────
 # go.mod
 # ─────────────────────────────────────────────────────────────
@@ -99,6 +136,7 @@ coverage.out
 coverage.html
 /docs/
 !/docs/.gitkeep
+!/docs/docs.go
 EOF
 
 # ─────────────────────────────────────────────────────────────
