@@ -2825,6 +2825,9 @@ func (h *UserHandler) Register(r *gin.RouterGroup) {
 	g.DELETE("/:id", h.delete)
 }
 
+// @Summary Create user
+// @Tags users
+// @Router /users [post]
 func (h *UserHandler) create(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -2843,6 +2846,9 @@ func (h *UserHandler) create(c *gin.Context) {
 	c.JSON(http.StatusCreated, dto.UserToResponse(u))
 }
 
+// @Summary List users
+// @Tags users
+// @Router /users [get]
 func (h *UserHandler) list(c *gin.Context) {
 	var q dto.ListUsersQuery
 	_ = c.ShouldBindQuery(&q)
@@ -2864,6 +2870,9 @@ func (h *UserHandler) list(c *gin.Context) {
 	c.JSON(http.StatusOK, PaginatedResponse{Data: out, Total: total, Page: q.Page, Limit: q.Limit})
 }
 
+// @Summary Get user
+// @Tags users
+// @Router /users/{id} [get]
 func (h *UserHandler) get(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -2878,6 +2887,9 @@ func (h *UserHandler) get(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.UserToResponse(u))
 }
 
+// @Summary Update user
+// @Tags users
+// @Router /users/{id} [put]
 func (h *UserHandler) update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -2901,6 +2913,9 @@ func (h *UserHandler) update(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.UserToResponse(u))
 }
 
+// @Summary Delete user
+// @Tags users
+// @Router /users/{id} [delete]
 func (h *UserHandler) delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -2951,6 +2966,9 @@ func (h *AuthHandler) Register(r *gin.RouterGroup) {
 	g.POST("/reset-password", h.resetPassword)
 }
 
+// @Summary Login
+// @Tags auth
+// @Router /auth/login [post]
 func (h *AuthHandler) login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -2969,6 +2987,9 @@ func (h *AuthHandler) login(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// @Summary Refresh access token
+// @Tags auth
+// @Router /auth/refresh [post]
 func (h *AuthHandler) refresh(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -2987,6 +3008,9 @@ func (h *AuthHandler) refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// @Summary Logout
+// @Tags auth
+// @Router /auth/logout [post]
 func (h *AuthHandler) logout(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3000,6 +3024,9 @@ func (h *AuthHandler) logout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Verify email
+// @Tags auth
+// @Router /auth/verify-email [post]
 func (h *AuthHandler) verifyEmail(c *gin.Context) {
 	var req dto.VerifyEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3017,6 +3044,9 @@ func (h *AuthHandler) verifyEmail(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Resend verification email
+// @Tags auth
+// @Router /auth/resend-verification [post]
 func (h *AuthHandler) resendVerification(c *gin.Context) {
 	var req dto.ResendVerificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3031,6 +3061,9 @@ func (h *AuthHandler) resendVerification(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Request password reset
+// @Tags auth
+// @Router /auth/forgot-password [post]
 func (h *AuthHandler) forgotPassword(c *gin.Context) {
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3045,6 +3078,9 @@ func (h *AuthHandler) forgotPassword(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Reset password
+// @Tags auth
+// @Router /auth/reset-password [post]
 func (h *AuthHandler) resetPassword(c *gin.Context) {
 	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3062,6 +3098,10 @@ func (h *AuthHandler) resetPassword(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Get current user
+// @Tags auth
+// @Security BearerAuth
+// @Router /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	uid, ok := middleware.GetUserID(c)
 	if !ok {
@@ -3114,6 +3154,10 @@ func (h *AdminHandler) Register(r *gin.RouterGroup) {
 	g.POST("/permissions", h.createPermission)
 }
 
+// @Summary List users for administration
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/users [get]
 func (h *AdminHandler) listUsers(c *gin.Context) {
 	var q dto.ListAdminUsersQuery
 	_ = c.ShouldBindQuery(&q)
@@ -3131,6 +3175,10 @@ func (h *AdminHandler) listUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, PaginatedResponse{Data: users, Total: total, Page: q.Page, Limit: q.Limit})
 }
 
+// @Summary Get user for administration
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/users/{id} [get]
 func (h *AdminHandler) getUser(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -3145,6 +3193,10 @@ func (h *AdminHandler) getUser(c *gin.Context) {
 	c.JSON(http.StatusOK, u)
 }
 
+// @Summary Set user active status
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/users/{id}/active [patch]
 func (h *AdminHandler) setUserActive(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -3163,6 +3215,10 @@ func (h *AdminHandler) setUserActive(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Assign role to user
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/users/{id}/roles [post]
 func (h *AdminHandler) assignRole(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -3185,6 +3241,10 @@ func (h *AdminHandler) assignRole(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Revoke role from user
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/users/{id}/roles/{role} [delete]
 func (h *AdminHandler) revokeRole(c *gin.Context) {
 	actorID, _ := middleware.GetUserID(c)
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
@@ -3200,6 +3260,10 @@ func (h *AdminHandler) revokeRole(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary List roles
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/roles [get]
 func (h *AdminHandler) listRoles(c *gin.Context) {
 	roles, err := h.svc.ListRoles(c.Request.Context())
 	if err != nil {
@@ -3209,6 +3273,10 @@ func (h *AdminHandler) listRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// @Summary Create role
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/roles [post]
 func (h *AdminHandler) createRole(c *gin.Context) {
 	var req dto.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -3227,6 +3295,10 @@ func (h *AdminHandler) createRole(c *gin.Context) {
 	c.JSON(http.StatusCreated, role)
 }
 
+// @Summary Set role permissions
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/roles/{name}/permissions [put]
 func (h *AdminHandler) setRolePermissions(c *gin.Context) {
 	roleName := c.Param("name")
 	var req dto.SetRolePermissionsRequest
@@ -3245,6 +3317,10 @@ func (h *AdminHandler) setRolePermissions(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary List permissions
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/permissions [get]
 func (h *AdminHandler) listPermissions(c *gin.Context) {
 	perms, err := h.svc.ListPermissions(c.Request.Context())
 	if err != nil {
@@ -3254,6 +3330,10 @@ func (h *AdminHandler) listPermissions(c *gin.Context) {
 	c.JSON(http.StatusOK, perms)
 }
 
+// @Summary Create permission
+// @Tags admin
+// @Security BearerAuth
+// @Router /admin/permissions [post]
 func (h *AdminHandler) createPermission(c *gin.Context) {
 	var req dto.CreatePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
