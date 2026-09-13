@@ -205,7 +205,7 @@ tidy:
 	go mod tidy
 
 swagger:
-	swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
+	go run github.com/swaggo/swag/cmd/swag@v1.16.6 init -g cmd/api/main.go -o docs --parseDependency --parseInternal
 
 migrate-diff:
 	atlas migrate diff $(name) --env local
