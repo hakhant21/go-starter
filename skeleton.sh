@@ -3466,6 +3466,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "__GO_MODULE__/docs"
 	"__GO_MODULE__/internal/cache"
 	"__GO_MODULE__/internal/config"
 	"__GO_MODULE__/internal/database"
