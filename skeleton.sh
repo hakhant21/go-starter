@@ -17,9 +17,33 @@ if [[ -r /dev/tty ]]; then
     break
   done
 fi
-MODULE="github.com/hakhant21/go-starter"
+
+DEFAULT_MODULE="github.com/hakhant21/go-starter"
+MODULE="$DEFAULT_MODULE"
+
+if [[ -r /dev/tty ]]; then
+  while :; do
+    read -r -p "GitHub repo/module [$DEFAULT_MODULE]: " MODULE_INPUT </dev/tty || exit 1
+    MODULE_INPUT="${MODULE_INPUT:-$DEFAULT_MODULE}"
+
+    # Accept either github.com/owner/repo or https://github.com/owner/repo(.git).
+    MODULE_INPUT="${MODULE_INPUT#https://}"
+    MODULE_INPUT="${MODULE_INPUT#http://}"
+    MODULE_INPUT="${MODULE_INPUT%.git}"
+    MODULE_INPUT="${MODULE_INPUT%/}"
+
+    if [[ ! "$MODULE_INPUT" =~ ^github\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
+      printf '%s\n' 'GitHub repo must look like github.com/owner/repo or https://github.com/owner/repo.'
+      continue
+    fi
+
+    MODULE="$MODULE_INPUT"
+    break
+  done
+fi
 
 echo "==> Creating $ROOT/"
+echo "==> Go module: $MODULE"
 rm -rf "$ROOT"
 mkdir -p "$ROOT"
 cd "$ROOT"
@@ -515,7 +539,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/me/starter/internal/model"
+	"__GO_MODULE__/internal/model"
 )
 
 func New(dsn string, isProd bool) (*gorm.DB, error) {
@@ -567,8 +591,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/rbac"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/rbac"
 )
 
 func SeedRBAC(db *gorm.DB) error {
@@ -1066,7 +1090,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/me/starter/internal/model"
+	"__GO_MODULE__/internal/model"
 )
 
 const (
@@ -1112,7 +1136,7 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	"github.com/me/starter/internal/metrics"
+	"__GO_MODULE__/internal/metrics"
 )
 
 type LoaderFunc[T any] func(ctx context.Context) (T, error)
@@ -1245,8 +1269,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
 )
 
 type Filter struct {
@@ -1392,8 +1416,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
 )
 
 type Repository interface {
@@ -1454,8 +1478,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
 )
 
 type Repository interface {
@@ -1512,7 +1536,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/me/starter/internal/model"
+	"__GO_MODULE__/internal/model"
 )
 
 type Repository interface {
@@ -1646,16 +1670,16 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/email"
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
-	refreshtokenrepo "github.com/me/starter/internal/repository/refresh_token"
-	tokenrepo "github.com/me/starter/internal/repository/token"
-	userrepo "github.com/me/starter/internal/repository/user"
-	"github.com/me/starter/internal/service"
-	usersvc "github.com/me/starter/internal/service/user"
-	"github.com/me/starter/pkg/jwt"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/email"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
+	refreshtokenrepo "__GO_MODULE__/internal/repository/refresh_token"
+	tokenrepo "__GO_MODULE__/internal/repository/token"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	"__GO_MODULE__/internal/service"
+	usersvc "__GO_MODULE__/internal/service/user"
+	"__GO_MODULE__/pkg/jwt"
 )
 
 type Service struct {
@@ -1832,10 +1856,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/me/starter/internal/email"
-	"github.com/me/starter/internal/model"
-	tokenrepo "github.com/me/starter/internal/repository/token"
-	"github.com/me/starter/pkg/jwt"
+	"__GO_MODULE__/internal/email"
+	"__GO_MODULE__/internal/model"
+	tokenrepo "__GO_MODULE__/internal/repository/token"
+	"__GO_MODULE__/pkg/jwt"
 )
 
 const (
@@ -1915,14 +1939,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/me/starter/internal/cache"
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
-	userrepo "github.com/me/starter/internal/repository/user"
-	"github.com/me/starter/internal/service"
-	authsvc "github.com/me/starter/internal/service/auth"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
+	"__GO_MODULE__/internal/cache"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	"__GO_MODULE__/internal/service"
+	authsvc "__GO_MODULE__/internal/service/auth"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
 )
 
 type Service struct {
@@ -2055,9 +2079,9 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	"github.com/me/starter/internal/cache"
-	"github.com/me/starter/internal/model"
-	rbacrepo "github.com/me/starter/internal/repository/rbac"
+	"__GO_MODULE__/internal/cache"
+	"__GO_MODULE__/internal/model"
+	rbacrepo "__GO_MODULE__/internal/repository/rbac"
 )
 
 type Service struct {
@@ -2157,13 +2181,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
-	rbacrepo "github.com/me/starter/internal/repository/rbac"
-	userrepo "github.com/me/starter/internal/repository/user"
-	"github.com/me/starter/internal/service"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
+	rbacrepo "__GO_MODULE__/internal/repository/rbac"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	"__GO_MODULE__/internal/service"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
 )
 
 type Service struct {
@@ -2320,8 +2344,8 @@ import (
 	"log/slog"
 	"time"
 
-	refreshtokenrepo "github.com/me/starter/internal/repository/refresh_token"
-	tokenrepo "github.com/me/starter/internal/repository/token"
+	refreshtokenrepo "__GO_MODULE__/internal/repository/refresh_token"
+	tokenrepo "__GO_MODULE__/internal/repository/token"
 )
 
 type Service struct {
@@ -2365,7 +2389,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/me/starter/pkg/jwt"
+	"__GO_MODULE__/pkg/jwt"
 )
 
 type ctxKey string
@@ -2421,7 +2445,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rbacsvc "github.com/me/starter/internal/service/rbac"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
 )
 
 func RequirePermission(rbac *rbacsvc.Service, permission string) gin.HandlerFunc {
@@ -2501,7 +2525,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/me/starter/internal/metrics"
+	"__GO_MODULE__/internal/metrics"
 )
 
 func Metrics() gin.HandlerFunc {
@@ -2663,8 +2687,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/me/starter/internal/repository"
-	"github.com/me/starter/internal/service"
+	"__GO_MODULE__/internal/repository"
+	"__GO_MODULE__/internal/service"
 )
 
 var validate = validator.New()
@@ -2745,8 +2769,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/me/starter/internal/dto"
-	usersvc "github.com/me/starter/internal/service/user"
+	"__GO_MODULE__/internal/dto"
+	usersvc "__GO_MODULE__/internal/service/user"
 )
 
 type UserHandler struct{ svc *usersvc.Service }
@@ -2860,11 +2884,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/middleware"
-	authsvc "github.com/me/starter/internal/service/auth"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
-	usersvc "github.com/me/starter/internal/service/user"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/middleware"
+	authsvc "__GO_MODULE__/internal/service/auth"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
+	usersvc "__GO_MODULE__/internal/service/user"
 )
 
 type AuthHandler struct {
@@ -3026,9 +3050,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/middleware"
-	adminsvc "github.com/me/starter/internal/service/admin"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/middleware"
+	adminsvc "__GO_MODULE__/internal/service/admin"
 )
 
 type AdminHandler struct{ svc *adminsvc.Service }
@@ -3284,12 +3308,12 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/me/starter/internal/middleware"
-	"github.com/me/starter/internal/rbac"
-	adminsvc "github.com/me/starter/internal/service/admin"
-	authsvc "github.com/me/starter/internal/service/auth"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
-	usersvc "github.com/me/starter/internal/service/user"
+	"__GO_MODULE__/internal/middleware"
+	"__GO_MODULE__/internal/rbac"
+	adminsvc "__GO_MODULE__/internal/service/admin"
+	authsvc "__GO_MODULE__/internal/service/auth"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
+	usersvc "__GO_MODULE__/internal/service/user"
 )
 
 type Deps struct {
@@ -3359,7 +3383,7 @@ import (
 
 	"ariga.io/atlas-provider-gorm/gormschema"
 
-	"github.com/me/starter/internal/model"
+	"__GO_MODULE__/internal/model"
 )
 
 func main() {
@@ -3402,20 +3426,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/me/starter/internal/cache"
-	"github.com/me/starter/internal/config"
-	"github.com/me/starter/internal/database"
-	"github.com/me/starter/internal/email"
-	"github.com/me/starter/internal/handler"
-	refreshtokenrepo "github.com/me/starter/internal/repository/refresh_token"
-	rbacrepo "github.com/me/starter/internal/repository/rbac"
-	tokenrepo "github.com/me/starter/internal/repository/token"
-	userrepo "github.com/me/starter/internal/repository/user"
-	adminsvc "github.com/me/starter/internal/service/admin"
-	authsvc "github.com/me/starter/internal/service/auth"
-	cleanupsvc "github.com/me/starter/internal/service/cleanup"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
-	usersvc "github.com/me/starter/internal/service/user"
+	"__GO_MODULE__/internal/cache"
+	"__GO_MODULE__/internal/config"
+	"__GO_MODULE__/internal/database"
+	"__GO_MODULE__/internal/email"
+	"__GO_MODULE__/internal/handler"
+	refreshtokenrepo "__GO_MODULE__/internal/repository/refresh_token"
+	rbacrepo "__GO_MODULE__/internal/repository/rbac"
+	tokenrepo "__GO_MODULE__/internal/repository/token"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	adminsvc "__GO_MODULE__/internal/service/admin"
+	authsvc "__GO_MODULE__/internal/service/auth"
+	cleanupsvc "__GO_MODULE__/internal/service/cleanup"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
+	usersvc "__GO_MODULE__/internal/service/user"
 )
 
 func main() {
@@ -3544,7 +3568,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/me/starter/internal/model"
+	"__GO_MODULE__/internal/model"
 )
 
 func NewTestDB(t *testing.T) *gorm.DB {
@@ -3582,10 +3606,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/me/starter/internal/model"
-	"github.com/me/starter/internal/repository"
-	userrepo "github.com/me/starter/internal/repository/user"
-	"github.com/me/starter/internal/testutil"
+	"__GO_MODULE__/internal/model"
+	"__GO_MODULE__/internal/repository"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	"__GO_MODULE__/internal/testutil"
 )
 
 func TestUserRepository_CreateAndGet(t *testing.T) {
@@ -3630,17 +3654,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/me/starter/internal/dto"
-	"github.com/me/starter/internal/email"
-	refreshtokenrepo "github.com/me/starter/internal/repository/refresh_token"
-	rbacrepo "github.com/me/starter/internal/repository/rbac"
-	tokenrepo "github.com/me/starter/internal/repository/token"
-	userrepo "github.com/me/starter/internal/repository/user"
-	"github.com/me/starter/internal/service"
-	authsvc "github.com/me/starter/internal/service/auth"
-	rbacsvc "github.com/me/starter/internal/service/rbac"
-	usersvc "github.com/me/starter/internal/service/user"
-	"github.com/me/starter/internal/testutil"
+	"__GO_MODULE__/internal/dto"
+	"__GO_MODULE__/internal/email"
+	refreshtokenrepo "__GO_MODULE__/internal/repository/refresh_token"
+	rbacrepo "__GO_MODULE__/internal/repository/rbac"
+	tokenrepo "__GO_MODULE__/internal/repository/token"
+	userrepo "__GO_MODULE__/internal/repository/user"
+	"__GO_MODULE__/internal/service"
+	authsvc "__GO_MODULE__/internal/service/auth"
+	rbacsvc "__GO_MODULE__/internal/service/rbac"
+	usersvc "__GO_MODULE__/internal/service/user"
+	"__GO_MODULE__/internal/testutil"
 )
 
 type noopMailer struct{}
@@ -3831,3 +3855,13 @@ Feature folders in `internal/repository/` and `internal/service/`:
 All tests live under `tests/`; the only test helper under `internal/` is
 `internal/testutil/db.go`.
 EOF
+
+# ─────────────────────────────────────────────────────────────
+# Apply selected Go module to generated imports
+# ─────────────────────────────────────────────────────────────
+while IFS= read -r -d '' file; do
+  tmp="${file}.tmp"
+  sed "s|__GO_MODULE__|${MODULE}|g" "$file" > "$tmp"
+  mv "$tmp" "$file"
+done < <(find . -type f -name '*.go' -print0)
+echo "==> Generated $ROOT with module $MODULE"
