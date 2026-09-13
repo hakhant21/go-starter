@@ -3463,10 +3463,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if !cfg.IsProduction() {
-		if err := database.AutoMigrate(db); err != nil {
-			return err
-		}
+	if err := database.AutoMigrate(db); err != nil {
+		return err
 	}
 	if err := database.SeedRBAC(db); err != nil {
 		return err
