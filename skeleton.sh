@@ -757,6 +757,12 @@ EOF
 cat > internal/dto/user.go <<'EOF'
 package dto
 
+import (
+	"time"
+
+	"__GO_MODULE__/internal/model"
+)
+
 type CreateUserRequest struct {
 	Name     string `json:"name"     validate:"required,min=2,max=100"`
 	Email    string `json:"email"    validate:"required,email"`
@@ -782,6 +788,25 @@ type UserResponse struct {
 type ListUsersQuery struct {
 	Page  int `form:"page"  validate:"omitempty,min=1"`
 	Limit int `form:"limit" validate:"omitempty,min=1,max=100"`
+}
+
+func UserToResponse(u *model.User) *UserResponse {
+	if u == nil {
+		return nil
+	}
+	roles := make([]string, 0, len(u.Roles))
+	for _, r := range u.Roles {
+		roles = append(roles, r.Name)
+	}
+	return &UserResponse{
+		ID:            u.ID,
+		Name:          u.Name,
+		Email:         u.Email,
+		Active:        u.Active,
+		EmailVerified: u.EmailVerified,
+		Roles:         roles,
+		CreatedAt:     u.CreatedAt.Format(time.RFC3339),
+	}
 }
 EOF
 
@@ -1678,7 +1703,6 @@ import (
 	tokenrepo "__GO_MODULE__/internal/repository/token"
 	userrepo "__GO_MODULE__/internal/repository/user"
 	"__GO_MODULE__/internal/service"
-	usersvc "__GO_MODULE__/internal/service/user"
 	"__GO_MODULE__/pkg/jwt"
 )
 
@@ -1839,7 +1863,7 @@ func (s *Service) issueTokens(ctx context.Context, u *model.User) (*dto.AuthResp
 	return &dto.AuthResponse{
 		Token:        access,
 		RefreshToken: raw,
-		User:         usersvc.ToResponse(u),
+		User:         dto.UserToResponse(u),
 	}, nil
 }
 
@@ -1934,7 +1958,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/sync/singleflight"
@@ -1999,8 +2022,12 @@ func (s *Service) Get(ctx context.Context, id uint) (*model.User, error) {
 		ctx,
 		&s.group,
 		fmt.Sprintf("user:%d", id),
-		s.userCache.Get,
-		s.userCache.Set,
+		func(ctx context.Context) (*model.User, bool) {
+			return s.userCache.Get(ctx, id)
+		},
+		func(ctx context.Context, u *model.User) {
+			s.userCache.Set(ctx, u)
+		},
 		func(ctx context.Context) (*model.User, error) {
 			return s.repo.GetByID(ctx, id)
 		},
@@ -2049,24 +2076,6 @@ func (s *Service) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func ToResponse(u *model.User) *dto.UserResponse {
-	if u == nil {
-		return nil
-	}
-	roles := make([]string, 0, len(u.Roles))
-	for _, r := range u.Roles {
-		roles = append(roles, r.Name)
-	}
-	return &dto.UserResponse{
-		ID:            u.ID,
-		Name:          u.Name,
-		Email:         u.Email,
-		Active:        u.Active,
-		EmailVerified: u.EmailVerified,
-		Roles:         roles,
-		CreatedAt:     u.CreatedAt.Format(time.RFC3339),
-	}
-}
 EOF
 
 # ─── service/rbac ───
@@ -2100,8 +2109,12 @@ func (s *Service) Permissions(ctx context.Context, userID uint) ([]string, error
 		ctx,
 		&s.group,
 		fmt.Sprintf("perms:%d", userID),
-		s.cache.Get,
-		s.cache.Set,
+		func(ctx context.Context) ([]string, bool) {
+			return s.cache.Get(ctx, userID)
+		},
+		func(ctx context.Context, perms []string) {
+			s.cache.Set(ctx, userID, perms)
+		},
 		func(ctx context.Context) ([]string, error) {
 			return s.repo.GetUserPermissions(ctx, userID)
 		},
@@ -2801,7 +2814,7 @@ func (h *UserHandler) create(c *gin.Context) {
 		respondServiceError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, usersvc.ToResponse(u))
+	c.JSON(http.StatusCreated, dto.UserToResponse(u))
 }
 
 func (h *UserHandler) list(c *gin.Context) {
@@ -2820,7 +2833,7 @@ func (h *UserHandler) list(c *gin.Context) {
 	}
 	out := make([]*dto.UserResponse, 0, len(users))
 	for i := range users {
-		out = append(out, usersvc.ToResponse(&users[i]))
+		out = append(out, dto.UserToResponse(&users[i]))
 	}
 	c.JSON(http.StatusOK, PaginatedResponse{Data: out, Total: total, Page: q.Page, Limit: q.Limit})
 }
@@ -2836,7 +2849,7 @@ func (h *UserHandler) get(c *gin.Context) {
 		respondServiceError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, usersvc.ToResponse(u))
+	c.JSON(http.StatusOK, dto.UserToResponse(u))
 }
 
 func (h *UserHandler) update(c *gin.Context) {
@@ -2859,7 +2872,7 @@ func (h *UserHandler) update(c *gin.Context) {
 		respondServiceError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, usersvc.ToResponse(u))
+	c.JSON(http.StatusOK, dto.UserToResponse(u))
 }
 
 func (h *UserHandler) delete(c *gin.Context) {
@@ -3035,7 +3048,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 	perms, _ := h.rbacSvc.Permissions(c.Request.Context(), uid)
-	resp := usersvc.ToResponse(u)
+	resp := dto.UserToResponse(u)
 	resp.Permissions = perms
 	c.JSON(http.StatusOK, resp)
 }
