@@ -21,60 +21,7 @@ if [[ -r /dev/tty ]]; then
   done
 fi
 
-# Use the GitHub URL everywhere:
-#   https://github.com/owner/repo.git -> github.com/owner/repo
-MODULE="${GITHUB_URL#https://}"
-MODULE="${MODULE%.git}"
-MODULE="${MODULE%/}"
-
-# Project folder comes from the repository name.
-ROOT="${MODULE##*/}"
-
-echo "==> GitHub URL: $GITHUB_URL"
-echo "==> Creating $ROOT/"
-echo "==> Go module: $MODULE"
-rm -rf "$ROOT"
-mkdir -p "$ROOT"
-cd "$ROOT"
-
-# ─────────────────────────────────────────────────────────────
-# Directory tree
-# ─────────────────────────────────────────────────────────────
-mkdir -p \
-  cmd/api \
-  cmd/atlas-loader \
-  internal/config \
-  internal/database \
-  internal/database/migrations \
-  internal/cache \
-  internal/metrics \
-  internal/email \
-  internal/rbac \
-  internal/model \
-  internal/dto \
-  internal/repository/user \
-  internal/repository/token \
-  internal/repository/refresh_token \
-  internal/repository/rbac \
-  internal/service/user \
-  internal/service/auth \
-  internal/service/rbac \
-  internal/service/admin \
-  internal/service/cleanup \
-  internal/handler \
-  internal/middleware \
-  internal/testutil \
-  tests/repository \
-  tests/service \
-  tests/handler \
-  pkg/jwt \
-  observability \
-  docs \
-  .github/workflows
-
-touch internal/database/migrations/.gitkeep
-touch docs/.gitkeep
-
+write_01_docs_docs_go() {
 cat > docs/docs.go <<'EOF'
 package docs
 
@@ -111,19 +58,17 @@ func init() {
 	swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
 }
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# go.mod
-# ─────────────────────────────────────────────────────────────
+write_02_go_mod() {
 cat > go.mod <<EOF
 module ${MODULE}
 
 go 1.26
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# .gitignore
-# ─────────────────────────────────────────────────────────────
+write_03__gitignore() {
 cat > .gitignore <<'EOF'
 .env
 .env.local
@@ -138,10 +83,9 @@ coverage.html
 !/docs/.gitkeep
 !/docs/docs.go
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# .dockerignore
-# ─────────────────────────────────────────────────────────────
+write_04__dockerignore() {
 cat > .dockerignore <<'EOF'
 .git
 .env
@@ -150,10 +94,9 @@ bin/
 tmp/
 coverage.*
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# .env.example
-# ─────────────────────────────────────────────────────────────
+write_05__env_example() {
 cat > .env.example <<'EOF'
 ENV=development
 PORT=8080
@@ -176,10 +119,9 @@ SMTP_FROM=no-reply@example.com
 
 BOOTSTRAP_ADMIN_EMAIL=
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# Makefile
-# ─────────────────────────────────────────────────────────────
+write_06_Makefile() {
 cat > Makefile <<'EOF'
 .PHONY: run build test test-cover tidy swagger migrate-diff migrate-apply \
         migrate-status docker-up docker-down docker-logs docker-reset
@@ -228,10 +170,9 @@ docker-reset:
 	docker compose down -v
 	docker compose up -d --build
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# Dockerfile
-# ─────────────────────────────────────────────────────────────
+write_07_Dockerfile() {
 cat > Dockerfile <<'EOF'
 FROM golang:1.26-alpine AS builder
 
@@ -254,10 +195,9 @@ HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
   CMD wget -qO- http://localhost:8080/health || exit 1
 ENTRYPOINT ["/app/api"]
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# docker-compose.yml
-# ─────────────────────────────────────────────────────────────
+write_08_docker_compose_yml() {
 cat > docker-compose.yml <<'EOF'
 services:
   postgres:
@@ -306,10 +246,9 @@ volumes:
   pgdata:
   promdata:
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# observability/prometheus.yml
-# ─────────────────────────────────────────────────────────────
+write_09_observability_prometheus_yml() {
 cat > observability/prometheus.yml <<'EOF'
 global:
   scrape_interval: 15s
@@ -320,10 +259,9 @@ scrape_configs:
       - targets: ["api:8080"]
     metrics_path: /metrics
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# atlas.hcl
-# ─────────────────────────────────────────────────────────────
+write_10_atlas_hcl() {
 cat > atlas.hcl <<'EOF'
 data "external_schema" "gorm" {
   program = ["go", "run", "./cmd/atlas-loader"]
@@ -337,10 +275,9 @@ env "local" {
   }
 }
 EOF
+}
 
-# ─────────────────────────────────────────────────────────────
-# .golangci.yml
-# ─────────────────────────────────────────────────────────────
+write_11__golangci_yml() {
 cat > .golangci.yml <<'EOF'
 run:
   timeout: 5m
@@ -387,10 +324,9 @@ issues:
     - path: cmd/
       linters: [unparam]
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# pkg/jwt
-# ═════════════════════════════════════════════════════════════
+write_12_pkg_jwt_jwt_go() {
 cat > pkg/jwt/jwt.go <<'EOF'
 package jwt
 
@@ -456,10 +392,9 @@ func HashToken(raw string) string {
 	return hex.EncodeToString(sum[:])
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/config
-# ═════════════════════════════════════════════════════════════
+write_13_internal_config_config_go() {
 cat > internal/config/config.go <<'EOF'
 package config
 
@@ -550,10 +485,9 @@ func splitCSV(s string) []string {
 	return out
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/database
-# ═════════════════════════════════════════════════════════════
+write_14_internal_database_database_go() {
 cat > internal/database/database.go <<'EOF'
 package database
 
@@ -608,7 +542,9 @@ func AutoMigrate(db *gorm.DB) error {
 	)
 }
 EOF
+}
 
+write_15_internal_database_seed_go() {
 cat > internal/database/seed.go <<'EOF'
 package database
 
@@ -660,10 +596,9 @@ func SeedRBAC(db *gorm.DB) error {
 	return nil
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/rbac
-# ═════════════════════════════════════════════════════════════
+write_16_internal_rbac_permissions_go() {
 cat > internal/rbac/permissions.go <<'EOF'
 package rbac
 
@@ -689,10 +624,9 @@ var DefaultRoles = map[string][]string{
 	},
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/model
-# ═════════════════════════════════════════════════════════════
+write_17_internal_model_user_go() {
 cat > internal/model/user.go <<'EOF'
 package model
 
@@ -716,7 +650,9 @@ type User struct {
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }
 EOF
+}
 
+write_18_internal_model_refresh_token_go() {
 cat > internal/model/refresh_token.go <<'EOF'
 package model
 
@@ -731,7 +667,9 @@ type RefreshToken struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 EOF
+}
 
+write_19_internal_model_token_go() {
 cat > internal/model/token.go <<'EOF'
 package model
 
@@ -754,7 +692,9 @@ type OneTimeToken struct {
 	CreatedAt time.Time  `json:"created_at"`
 }
 EOF
+}
 
+write_20_internal_model_role_go() {
 cat > internal/model/role.go <<'EOF'
 package model
 
@@ -776,10 +716,9 @@ type Permission struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/dto
-# ═════════════════════════════════════════════════════════════
+write_21_internal_dto_user_go() {
 cat > internal/dto/user.go <<'EOF'
 package dto
 
@@ -835,7 +774,9 @@ func UserToResponse(u *model.User) *UserResponse {
 	}
 }
 EOF
+}
 
+write_22_internal_dto_auth_go() {
 cat > internal/dto/auth.go <<'EOF'
 package dto
 
@@ -871,7 +812,9 @@ type ResendVerificationRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 EOF
+}
 
+write_23_internal_dto_admin_go() {
 cat > internal/dto/admin.go <<'EOF'
 package dto
 
@@ -930,10 +873,9 @@ type SetActiveRequest struct {
 	Active bool `json:"active"`
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/email
-# ═════════════════════════════════════════════════════════════
+write_24_internal_email_email_go() {
 cat > internal/email/email.go <<'EOF'
 package email
 
@@ -949,7 +891,9 @@ type Sender interface {
 	Send(ctx context.Context, msg Message) error
 }
 EOF
+}
 
+write_25_internal_email_console_go() {
 cat > internal/email/console.go <<'EOF'
 package email
 
@@ -971,7 +915,9 @@ func (s *ConsoleSender) Send(_ context.Context, msg Message) error {
 	return nil
 }
 EOF
+}
 
+write_26_internal_email_smtp_go() {
 cat > internal/email/smtp.go <<'EOF'
 package email
 
@@ -998,10 +944,9 @@ func (s *SMTPSender) Send(_ context.Context, msg Message) error {
 	return smtp.SendMail(s.Host+":"+s.Port, auth, s.From, []string{msg.To}, []byte(headers+msg.Body))
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/metrics
-# ═════════════════════════════════════════════════════════════
+write_27_internal_metrics_metrics_go() {
 cat > internal/metrics/metrics.go <<'EOF'
 package metrics
 
@@ -1041,10 +986,9 @@ var (
 	)
 )
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/cache
-# ═════════════════════════════════════════════════════════════
+write_28_internal_cache_redis_go() {
 cat > internal/cache/redis.go <<'EOF'
 package cache
 
@@ -1070,7 +1014,9 @@ func NewRedis(url string) (*redis.Client, error) {
 	return client, nil
 }
 EOF
+}
 
+write_29_internal_cache_rbac_go() {
 cat > internal/cache/rbac.go <<'EOF'
 package cache
 
@@ -1128,7 +1074,9 @@ func (c *RBACCache) InvalidateUsers(ctx context.Context, userIDs []uint) {
 	_ = c.rdb.Del(ctx, keys...).Err()
 }
 EOF
+}
 
+write_30_internal_cache_user_go() {
 cat > internal/cache/user.go <<'EOF'
 package cache
 
@@ -1177,7 +1125,9 @@ func (c *UserCache) Invalidate(ctx context.Context, id uint) {
 	_ = c.rdb.Del(ctx, c.key(id)).Err()
 }
 EOF
+}
 
+write_31_internal_cache_singleflight_go() {
 cat > internal/cache/singleflight.go <<'EOF'
 package cache
 
@@ -1237,7 +1187,9 @@ func keyPrefix(key string) string {
 	return key
 }
 EOF
+}
 
+write_32_internal_cache_lock_go() {
 cat > internal/cache/lock.go <<'EOF'
 package cache
 
@@ -1296,10 +1248,9 @@ func randomToken() string {
 	return hex.EncodeToString(b)
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/repository
-# ═════════════════════════════════════════════════════════════
+write_33_internal_repository_errors_go() {
 cat > internal/repository/errors.go <<'EOF'
 package repository
 
@@ -1307,8 +1258,9 @@ import "errors"
 
 var ErrNotFound = errors.New("record not found")
 EOF
+}
 
-# ─── repository/user ───
+write_34_internal_repository_user_user_go() {
 cat > internal/repository/user/user.go <<'EOF'
 package user
 
@@ -1454,8 +1406,9 @@ func (r *repo) UpdatePassword(ctx context.Context, userID uint, passwordHash str
 		Update("password", passwordHash).Error
 }
 EOF
+}
 
-# ─── repository/token ───
+write_35_internal_repository_token_token_go() {
 cat > internal/repository/token/token.go <<'EOF'
 package token
 
@@ -1516,8 +1469,9 @@ func (r *repo) DeleteExpired(ctx context.Context) error {
 	return r.db.WithContext(ctx).Where("expires_at < ?", time.Now()).Delete(&model.OneTimeToken{}).Error
 }
 EOF
+}
 
-# ─── repository/refresh_token ───
+write_36_internal_repository_refresh_token_refresh_token_go() {
 cat > internal/repository/refresh_token/refresh_token.go <<'EOF'
 package refreshtoken
 
@@ -1576,8 +1530,9 @@ func (r *repo) DeleteExpired(ctx context.Context) error {
 	return r.db.WithContext(ctx).Where("expires_at < ?", time.Now()).Delete(&model.RefreshToken{}).Error
 }
 EOF
+}
 
-# ─── repository/rbac ───
+write_37_internal_repository_rbac_rbac_go() {
 cat > internal/repository/rbac/rbac.go <<'EOF'
 package rbac
 
@@ -1689,10 +1644,9 @@ func (r *repo) CreatePermission(ctx context.Context, p *model.Permission) error 
 	return r.db.WithContext(ctx).Create(p).Error
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/service
-# ═════════════════════════════════════════════════════════════
+write_38_internal_service_errors_go() {
 cat > internal/service/errors.go <<'EOF'
 package service
 
@@ -1708,8 +1662,9 @@ var (
 	ErrEmailNotVerified     = errors.New("email not verified")
 )
 EOF
+}
 
-# ─── service/auth ───
+write_39_internal_service_auth_auth_go() {
 cat > internal/service/auth/auth.go <<'EOF'
 package auth
 
@@ -1897,7 +1852,9 @@ func (s *Service) SendVerificationEmail(ctx context.Context, u *model.User) erro
 	return s.notifier.SendVerification(ctx, u)
 }
 EOF
+}
 
+write_40_internal_service_auth_notifier_go() {
 cat > internal/service/auth/notifier.go <<'EOF'
 package auth
 
@@ -1973,8 +1930,9 @@ func (n *Notifier) SendPasswordReset(ctx context.Context, u *model.User) error {
 	})
 }
 EOF
+}
 
-# ─── service/user ───
+write_41_internal_service_user_user_go() {
 cat > internal/service/user/user.go <<'EOF'
 package user
 
@@ -2103,8 +2061,9 @@ func (s *Service) Delete(ctx context.Context, id uint) error {
 }
 
 EOF
+}
 
-# ─── service/rbac ───
+write_42_internal_service_rbac_rbac_go() {
 cat > internal/service/rbac/rbac.go <<'EOF'
 package rbac
 
@@ -2211,8 +2170,9 @@ func (s *Service) CacheInvalidate(ctx context.Context, userID uint) error {
 	return nil
 }
 EOF
+}
 
-# ─── service/admin ───
+write_43_internal_service_admin_admin_go() {
 cat > internal/service/admin/admin.go <<'EOF'
 package admin
 
@@ -2373,8 +2333,9 @@ func (s *Service) roleResponse(ctx context.Context, name string) (*dto.RoleRespo
 	return nil, repository.ErrNotFound
 }
 EOF
+}
 
-# ─── service/cleanup ───
+write_44_internal_service_cleanup_cleanup_go() {
 cat > internal/service/cleanup/cleanup.go <<'EOF'
 package cleanup
 
@@ -2414,10 +2375,9 @@ func (s *Service) Run(ctx context.Context, interval time.Duration) {
 	}
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/middleware
-# ═════════════════════════════════════════════════════════════
+write_45_internal_middleware_auth_go() {
 cat > internal/middleware/auth.go <<'EOF'
 package middleware
 
@@ -2475,7 +2435,9 @@ func GetEmail(c *gin.Context) string {
 	return s
 }
 EOF
+}
 
+write_46_internal_middleware_rbac_go() {
 cat > internal/middleware/rbac.go <<'EOF'
 package middleware
 
@@ -2507,7 +2469,9 @@ func RequirePermission(rbac *rbacsvc.Service, permission string) gin.HandlerFunc
 	}
 }
 EOF
+}
 
+write_47_internal_middleware_logging_go() {
 cat > internal/middleware/logging.go <<'EOF'
 package middleware
 
@@ -2532,7 +2496,9 @@ func Logging() gin.HandlerFunc {
 	}
 }
 EOF
+}
 
+write_48_internal_middleware_recovery_go() {
 cat > internal/middleware/recovery.go <<'EOF'
 package middleware
 
@@ -2555,7 +2521,9 @@ func Recovery() gin.HandlerFunc {
 	}
 }
 EOF
+}
 
+write_49_internal_middleware_metrics_go() {
 cat > internal/middleware/metrics.go <<'EOF'
 package middleware
 
@@ -2597,7 +2565,9 @@ func statusClass(code int) string {
 	}
 }
 EOF
+}
 
+write_50_internal_middleware_ratelimit_go() {
 cat > internal/middleware/ratelimit.go <<'EOF'
 package middleware
 
@@ -2635,7 +2605,9 @@ func RateLimit(rdb *redis.Client, prefix string, limit int, window time.Duration
 	}
 }
 EOF
+}
 
+write_51_internal_middleware_security_go() {
 cat > internal/middleware/security.go <<'EOF'
 package middleware
 
@@ -2655,7 +2627,9 @@ func SecurityHeaders() gin.HandlerFunc {
 	}
 }
 EOF
+}
 
+write_52_internal_middleware_cors_go() {
 cat > internal/middleware/cors.go <<'EOF'
 package middleware
 
@@ -2694,7 +2668,9 @@ func CORS(origins []string) gin.HandlerFunc {
 	}
 }
 EOF
+}
 
+write_53_internal_middleware_bodylimit_go() {
 cat > internal/middleware/bodylimit.go <<'EOF'
 package middleware
 
@@ -2711,10 +2687,9 @@ func BodyLimit(maxBytes int64) gin.HandlerFunc {
 	}
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/handler
-# ═════════════════════════════════════════════════════════════
+write_54_internal_handler_response_go() {
 cat > internal/handler/response.go <<'EOF'
 package handler
 
@@ -2798,7 +2773,9 @@ func respondServiceError(c *gin.Context, err error) {
 	}
 }
 EOF
+}
 
+write_55_internal_handler_user_go() {
 cat > internal/handler/user.go <<'EOF'
 package handler
 
@@ -2929,7 +2906,9 @@ func (h *UserHandler) delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 EOF
+}
 
+write_56_internal_handler_auth_go() {
 cat > internal/handler/auth.go <<'EOF'
 package handler
 
@@ -3119,7 +3098,9 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 EOF
+}
 
+write_57_internal_handler_admin_go() {
 cat > internal/handler/admin.go <<'EOF'
 package handler
 
@@ -3352,7 +3333,9 @@ func (h *AdminHandler) createPermission(c *gin.Context) {
 	c.JSON(http.StatusCreated, p)
 }
 EOF
+}
 
+write_58_internal_handler_health_go() {
 cat > internal/handler/health.go <<'EOF'
 package handler
 
@@ -3414,7 +3397,9 @@ func (h *HealthHandler) ready(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 EOF
+}
 
+write_59_internal_handler_router_go() {
 cat > internal/handler/router.go <<'EOF'
 package handler
 
@@ -3488,10 +3473,9 @@ func NewRouter(d Deps) *gin.Engine {
 	return r
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# cmd/atlas-loader
-# ═════════════════════════════════════════════════════════════
+write_60_cmd_atlas_loader_main_go() {
 cat > cmd/atlas-loader/main.go <<'EOF'
 package main
 
@@ -3520,10 +3504,9 @@ func main() {
 	io.WriteString(os.Stdout, stmts)
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# cmd/api/main.go
-# ═════════════════════════════════════════════════════════════
+write_61_cmd_api_main_go() {
 cat > cmd/api/main.go <<'EOF'
 // @title           Starter API
 // @version         1.0
@@ -3672,10 +3655,9 @@ func run() error {
 	return srv.Shutdown(shutdownCtx)
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# internal/testutil — shared helper, NOT a test file
-# ═════════════════════════════════════════════════════════════
+write_62_internal_testutil_db_go() {
 cat > internal/testutil/db.go <<'EOF'
 package testutil
 
@@ -3710,12 +3692,9 @@ func NewTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# tests/ — all _test.go files live here
-# ═════════════════════════════════════════════════════════════
-
-# ─── tests/repository ───
+write_63_tests_repository_user_test_go() {
 cat > tests/repository/user_test.go <<'EOF'
 package repository_test
 
@@ -3762,8 +3741,9 @@ func TestUserRepository_NotFound(t *testing.T) {
 	}
 }
 EOF
+}
 
-# ─── tests/service ───
+write_64_tests_service_user_test_go() {
 cat > tests/service/user_test.go <<'EOF'
 package service_test
 
@@ -3812,10 +3792,9 @@ func TestUserService_Create_DuplicateEmail(t *testing.T) {
 	}
 }
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# GitHub Actions CI
-# ═════════════════════════════════════════════════════════════
+write_65__github_workflows_ci_yml() {
 cat > .github/workflows/ci.yml <<'EOF'
 name: CI
 
@@ -3914,10 +3893,9 @@ jobs:
         with:
           go-version-input: ${{ env.GO_VERSION }}
 EOF
+}
 
-# ═════════════════════════════════════════════════════════════
-# README
-# ═════════════════════════════════════════════════════════════
+write_66_README_md() {
 cat > README.md <<'EOF'
 # Go Starter
 
@@ -3973,6 +3951,128 @@ Feature folders in `internal/repository/` and `internal/service/`:
 All tests live under `tests/`; the only test helper under `internal/` is
 `internal/testutil/db.go`.
 EOF
+}
+generate_project() {
+  # Use the GitHub URL everywhere:
+#   https://github.com/owner/repo.git -> github.com/owner/repo
+MODULE="${GITHUB_URL#https://}"
+MODULE="${MODULE%.git}"
+MODULE="${MODULE%/}"
+
+# Project folder comes from the repository name.
+ROOT="${MODULE##*/}"
+
+echo "==> GitHub URL: $GITHUB_URL"
+echo "==> Creating $ROOT/"
+echo "==> Go module: $MODULE"
+rm -rf "$ROOT"
+mkdir -p "$ROOT"
+cd "$ROOT"
+
+# ─────────────────────────────────────────────────────────────
+# Directory tree
+# ─────────────────────────────────────────────────────────────
+mkdir -p \
+  cmd/api \
+  cmd/atlas-loader \
+  internal/config \
+  internal/database \
+  internal/database/migrations \
+  internal/cache \
+  internal/metrics \
+  internal/email \
+  internal/rbac \
+  internal/model \
+  internal/dto \
+  internal/repository/user \
+  internal/repository/token \
+  internal/repository/refresh_token \
+  internal/repository/rbac \
+  internal/service/user \
+  internal/service/auth \
+  internal/service/rbac \
+  internal/service/admin \
+  internal/service/cleanup \
+  internal/handler \
+  internal/middleware \
+  internal/testutil \
+  tests/repository \
+  tests/service \
+  tests/handler \
+  pkg/jwt \
+  observability \
+  docs \
+  .github/workflows
+
+touch internal/database/migrations/.gitkeep
+touch docs/.gitkeep
+
+  write_01_docs_docs_go
+  write_02_go_mod
+  write_03__gitignore
+  write_04__dockerignore
+  write_05__env_example
+  write_06_Makefile
+  write_07_Dockerfile
+  write_08_docker_compose_yml
+  write_09_observability_prometheus_yml
+  write_10_atlas_hcl
+  write_11__golangci_yml
+  write_12_pkg_jwt_jwt_go
+  write_13_internal_config_config_go
+  write_14_internal_database_database_go
+  write_15_internal_database_seed_go
+  write_16_internal_rbac_permissions_go
+  write_17_internal_model_user_go
+  write_18_internal_model_refresh_token_go
+  write_19_internal_model_token_go
+  write_20_internal_model_role_go
+  write_21_internal_dto_user_go
+  write_22_internal_dto_auth_go
+  write_23_internal_dto_admin_go
+  write_24_internal_email_email_go
+  write_25_internal_email_console_go
+  write_26_internal_email_smtp_go
+  write_27_internal_metrics_metrics_go
+  write_28_internal_cache_redis_go
+  write_29_internal_cache_rbac_go
+  write_30_internal_cache_user_go
+  write_31_internal_cache_singleflight_go
+  write_32_internal_cache_lock_go
+  write_33_internal_repository_errors_go
+  write_34_internal_repository_user_user_go
+  write_35_internal_repository_token_token_go
+  write_36_internal_repository_refresh_token_refresh_token_go
+  write_37_internal_repository_rbac_rbac_go
+  write_38_internal_service_errors_go
+  write_39_internal_service_auth_auth_go
+  write_40_internal_service_auth_notifier_go
+  write_41_internal_service_user_user_go
+  write_42_internal_service_rbac_rbac_go
+  write_43_internal_service_admin_admin_go
+  write_44_internal_service_cleanup_cleanup_go
+  write_45_internal_middleware_auth_go
+  write_46_internal_middleware_rbac_go
+  write_47_internal_middleware_logging_go
+  write_48_internal_middleware_recovery_go
+  write_49_internal_middleware_metrics_go
+  write_50_internal_middleware_ratelimit_go
+  write_51_internal_middleware_security_go
+  write_52_internal_middleware_cors_go
+  write_53_internal_middleware_bodylimit_go
+  write_54_internal_handler_response_go
+  write_55_internal_handler_user_go
+  write_56_internal_handler_auth_go
+  write_57_internal_handler_admin_go
+  write_58_internal_handler_health_go
+  write_59_internal_handler_router_go
+  write_60_cmd_atlas_loader_main_go
+  write_61_cmd_api_main_go
+  write_62_internal_testutil_db_go
+  write_63_tests_repository_user_test_go
+  write_64_tests_service_user_test_go
+  write_65__github_workflows_ci_yml
+  write_66_README_md
 
 # ─────────────────────────────────────────────────────────────
 # Apply selected Go module to generated imports
@@ -3990,5 +4090,8 @@ if command -v git >/dev/null 2>&1; then
   git remote add origin "$GITHUB_URL"
 fi
 
-echo "==> Generated $ROOT with module $MODULE"
-echo "==> Git remote origin: $GITHUB_URL"
+  echo "==> Generated $ROOT with module $MODULE"
+  echo "==> Git remote origin: $GITHUB_URL"
+}
+
+generate_project
