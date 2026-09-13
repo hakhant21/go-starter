@@ -1,47 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="starter"
+DEFAULT_GITHUB_URL="https://github.com/hakhant21/go-starter.git"
+GITHUB_URL="$DEFAULT_GITHUB_URL"
+
 if [[ -r /dev/tty ]]; then
   while :; do
-    read -r -p "Project name [starter]: " PROJECT_NAME </dev/tty || exit 1
-    PROJECT_NAME="${PROJECT_NAME:-starter}"
+    read -r -p "GitHub URL [$DEFAULT_GITHUB_URL]: " GITHUB_INPUT </dev/tty || exit 1
+    GITHUB_INPUT="${GITHUB_INPUT:-$DEFAULT_GITHUB_URL}"
+    GITHUB_INPUT="${GITHUB_INPUT%/}"
 
-    # Avoid treating shell assignment text such as ROOT= as a directory name.
-    if [[ "$PROJECT_NAME" == *[=/\\]* || "$PROJECT_NAME" == "." || "$PROJECT_NAME" == ".." ]]; then
-      printf '%s\n' 'Project name must be a single directory name (without =, /, or \\).'
+    # Only accept a GitHub repository URL.
+    if [[ ! "$GITHUB_INPUT" =~ ^https://github\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+(\.git)?$ ]]; then
+      printf '%s\n' 'GitHub URL must look like https://github.com/owner/repo or https://github.com/owner/repo.git'
       continue
     fi
 
-    ROOT="$PROJECT_NAME"
+    GITHUB_URL="$GITHUB_INPUT"
     break
   done
 fi
 
-DEFAULT_MODULE="github.com/hakhant21/go-starter"
-MODULE="$DEFAULT_MODULE"
+# Use the GitHub URL everywhere:
+#   https://github.com/owner/repo.git -> github.com/owner/repo
+MODULE="${GITHUB_URL#https://}"
+MODULE="${MODULE%.git}"
+MODULE="${MODULE%/}"
 
-if [[ -r /dev/tty ]]; then
-  while :; do
-    read -r -p "GitHub repo/module [$DEFAULT_MODULE]: " MODULE_INPUT </dev/tty || exit 1
-    MODULE_INPUT="${MODULE_INPUT:-$DEFAULT_MODULE}"
+# Project folder comes from the repository name.
+ROOT="${MODULE##*/}"
 
-    # Accept either github.com/owner/repo or https://github.com/owner/repo(.git).
-    MODULE_INPUT="${MODULE_INPUT#https://}"
-    MODULE_INPUT="${MODULE_INPUT#http://}"
-    MODULE_INPUT="${MODULE_INPUT%.git}"
-    MODULE_INPUT="${MODULE_INPUT%/}"
-
-    if [[ ! "$MODULE_INPUT" =~ ^github\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]]; then
-      printf '%s\n' 'GitHub repo must look like github.com/owner/repo or https://github.com/owner/repo.'
-      continue
-    fi
-
-    MODULE="$MODULE_INPUT"
-    break
-  done
-fi
-
+echo "==> GitHub URL: $GITHUB_URL"
 echo "==> Creating $ROOT/"
 echo "==> Go module: $MODULE"
 rm -rf "$ROOT"
@@ -92,7 +81,7 @@ touch docs/.gitkeep
 cat > go.mod <<EOF
 module ${MODULE}
 
-go 1.23
+go 1.26
 EOF
 
 # ─────────────────────────────────────────────────────────────
@@ -207,13 +196,13 @@ EOF
 # Dockerfile
 # ─────────────────────────────────────────────────────────────
 cat > Dockerfile <<'EOF'
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 RUN apk add --no-cache git
 
 COPY go.mod go.sum* ./
-RUN go mod download || true
+RUN go mod download
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/api ./cmd/api
@@ -3721,7 +3710,7 @@ on:
     branches: [main]
 
 env:
-  GO_VERSION: "1.23"
+  GO_VERSION: "1.26"
 
 jobs:
   lint:
@@ -3877,4 +3866,13 @@ while IFS= read -r -d '' file; do
   sed "s|__GO_MODULE__|${MODULE}|g" "$file" > "$tmp"
   mv "$tmp" "$file"
 done < <(find . -type f -name '*.go' -print0)
+
+# Configure the generated project to use the same GitHub repository URL.
+if command -v git >/dev/null 2>&1; then
+  git init -q
+  git remote remove origin >/dev/null 2>&1 || true
+  git remote add origin "$GITHUB_URL"
+fi
+
 echo "==> Generated $ROOT with module $MODULE"
+echo "==> Git remote origin: $GITHUB_URL"
